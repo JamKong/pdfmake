@@ -465,30 +465,17 @@ function renderWatermark(page, pdfKitDoc) {
 
 	var angle = !(page.watermark.rotate == undefined || page.watermark.rotate == null) ? page.watermark.rotate : Math.atan2(pdfKitDoc.page.height, pdfKitDoc.page.width) * -180 / Math.PI;
 	pdfKitDoc.rotate(angle, {origin: [pdfKitDoc.page.width / 2, pdfKitDoc.page.height / 2]});
-
+	pdfKitDoc._font = watermark.font;
+	pdfKitDoc.fontSize(watermark.size.fontSize);
 	if(!!page.watermark.textLayout && page.watermark.textLayout instanceof Function){
 		return page.watermark.textLayout(page,pdfKitDoc);
 	}
 
 	var x = pdfKitDoc.page.width / 2 - watermark.size.size.width / 2;
 	var y = pdfKitDoc.page.height / 2 - watermark.size.size.height / 4;
-	pdfKitDoc._font = watermark.font;
-	pdfKitDoc.fontSize(watermark.size.fontSize);
+
 	pdfKitDoc.text(watermark.text, x, y, {lineBreak: false});
 	pdfKitDoc.restore();
-	// var x = 0;
-	// var y = -watermark.size.fontSize;
-	// var row = 0;
-	// for (; y < pdfKitDoc.page.width * 2;) {
-	// 	x = (1 - row) * watermark.size.fontSize * 2.3;
-	// 	for (; x < pdfKitDoc.page.height * 2;) {
-	// 		pdfKitDoc.text(watermark.text, x, y, {lineBreak: false});
-	// 		x += watermark.size.fontSize * (watermark.text.length / 1.5);
-	// 	}
-	// 	y += watermark.size.fontSize * 2;
-	// 	row++;
-	// }
-	// pdfKitDoc.restore();
 }
 
 function renderVector(vector, pdfKitDoc) {
