@@ -89,7 +89,12 @@ PdfPrinter.prototype.createPdfKitDocument = function (docDefinition, options) {
 	var compressPdf = isBoolean(docDefinition.compress) ? docDefinition.compress : true;
 	var bufferPages = options.bufferPages || false;
 
-	this.pdfKitDoc = PdfKitEngine.createPdfDocument({size: [pageSize.width, pageSize.height], bufferPages: bufferPages, autoFirstPage: false, compress: compressPdf});
+	this.pdfKitDoc = PdfKitEngine.createPdfDocument({
+		size: [pageSize.width, pageSize.height],
+		bufferPages: bufferPages,
+		autoFirstPage: false,
+		compress: compressPdf
+	});
 	setMetadata(docDefinition, this.pdfKitDoc);
 
 	this.fontProvider = new FontProvider(this.fontDescriptors, this.pdfKitDoc);
@@ -103,7 +108,10 @@ PdfPrinter.prototype.createPdfKitDocument = function (docDefinition, options) {
 		builder.registerTableLayouts(options.tableLayouts);
 	}
 
-	var pages = builder.layoutDocument(docDefinition.content, this.fontProvider, docDefinition.styles || {}, docDefinition.defaultStyle || {fontSize: 12, font: 'Roboto'}, docDefinition.background, docDefinition.header, docDefinition.footer, docDefinition.images, docDefinition.watermark, docDefinition.pageBreakBefore);
+	var pages = builder.layoutDocument(docDefinition.content, this.fontProvider, docDefinition.styles || {}, docDefinition.defaultStyle || {
+		fontSize: 12,
+		font: 'Roboto'
+	}, docDefinition.background, docDefinition.header, docDefinition.footer, docDefinition.images, docDefinition.watermark, docDefinition.pageBreakBefore);
 	var maxNumberPages = docDefinition.maxPagesNumber || -1;
 	if (isNumber(maxNumberPages) && maxNumberPages > -1) {
 		pages = pages.slice(0, maxNumberPages);
@@ -328,7 +336,8 @@ function renderPages(pages, fontProvider, pdfKitDoc, progressCallback) {
 	}
 
 	var renderedItems = 0;
-	progressCallback = progressCallback || function () {};
+	progressCallback = progressCallback || function () {
+	};
 
 	for (var i = 0; i < pages.length; i++) {
 		if (i > 0) {
@@ -435,7 +444,10 @@ function renderLine(line, x, y, pdfKitDoc) {
 
 		if (inline.linkToPage) {
 			var _ref = pdfKitDoc.ref({Type: 'Action', S: 'GoTo', D: [inline.linkToPage, 0, 0]}).end();
-			pdfKitDoc.annotate(x + inline.x, y + shiftToBaseline, inline.width, inline.height, {Subtype: 'Link', Dest: [inline.linkToPage - 1, 'XYZ', null, null, null]});
+			pdfKitDoc.annotate(x + inline.x, y + shiftToBaseline, inline.width, inline.height, {
+				Subtype: 'Link',
+				Dest: [inline.linkToPage - 1, 'XYZ', null, null, null]
+			});
 		}
 
 	}
@@ -451,17 +463,32 @@ function renderWatermark(page, pdfKitDoc) {
 
 	pdfKitDoc.save();
 
-	var angle = Math.atan2(pdfKitDoc.page.height, pdfKitDoc.page.width) * -180 / Math.PI;
+	var angle = !(page.watermark.rotate == undefined || page.watermark.rotate == null) ? page.watermark.rotate : Math.atan2(pdfKitDoc.page.height, pdfKitDoc.page.width) * -180 / Math.PI;
 	pdfKitDoc.rotate(angle, {origin: [pdfKitDoc.page.width / 2, pdfKitDoc.page.height / 2]});
+
+	if(!!page.watermark.textLayout && page.watermark.textLayout instanceof Function){
+		return page.watermark.textLayout(page,pdfKitDoc);
+	}
 
 	var x = pdfKitDoc.page.width / 2 - watermark.size.size.width / 2;
 	var y = pdfKitDoc.page.height / 2 - watermark.size.size.height / 4;
-
 	pdfKitDoc._font = watermark.font;
 	pdfKitDoc.fontSize(watermark.size.fontSize);
 	pdfKitDoc.text(watermark.text, x, y, {lineBreak: false});
-
 	pdfKitDoc.restore();
+	// var x = 0;
+	// var y = -watermark.size.fontSize;
+	// var row = 0;
+	// for (; y < pdfKitDoc.page.width * 2;) {
+	// 	x = (1 - row) * watermark.size.fontSize * 2.3;
+	// 	for (; x < pdfKitDoc.page.height * 2;) {
+	// 		pdfKitDoc.text(watermark.text, x, y, {lineBreak: false});
+	// 		x += watermark.size.fontSize * (watermark.text.length / 1.5);
+	// 	}
+	// 	y += watermark.size.fontSize * 2;
+	// 	row++;
+	// }
+	// pdfKitDoc.restore();
 }
 
 function renderVector(vector, pdfKitDoc) {
