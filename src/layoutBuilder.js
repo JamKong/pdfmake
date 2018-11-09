@@ -256,6 +256,7 @@ LayoutBuilder.prototype.addWatermark = function (watermark, fontProvider, defaul
 	watermark.opacity = watermark.opacity || 0.6;
 	watermark.bold = watermark.bold || false;
 	watermark.italics = watermark.italics || false;
+	watermark.excludePages = watermark.excludePages || [];
 
 	var watermarkObject = {
 		text: watermark.text,
@@ -266,16 +267,39 @@ LayoutBuilder.prototype.addWatermark = function (watermark, fontProvider, defaul
 	};
 
 	var pages = this.writer.context().pages;
-	for (var i = 0, l = pages.length; i < l; i++) {
-		pages[i].watermark = watermarkObject;
+	if (!!watermark.excludePages && watermark.excludePages.length > 0) {
+		var isExclude;
+		for (var i = 0, l = pages.length; i < l; i++) {
+			isExclude = false;
+			for (var j = 0; j < watermark.excludePages.length; j++) {
+				if (watermark.excludePages[j] == i + 1) {
+					isExclude = true;
+				}
+			}
+			if (isExclude) {
+				continue;
+			}
+			pages[i].watermark = watermarkObject;
+
+		}
+	} else {
+		for (var i = 0, l = pages.length; i < l; i++) {
+			pages[i].watermark = watermarkObject;
+		}
 	}
+
 
 	function getSize(pageSize, watermark, fontProvider) {
 		var width = pageSize.width;
 		var height = pageSize.height;
-		var targetWidth = Math.sqrt(width * width + height * height) * 0.8; /* page diagonal * sample factor */
+		var targetWidth = Math.sqrt(width * width + height * height) * 0.8;
+		/* page diagonal * sample factor */
 		var textTools = new TextTools(fontProvider);
-		var styleContextStack = new StyleContextStack(null, {font: watermark.font, bold: watermark.bold, italics: watermark.italics});
+		var styleContextStack = new StyleContextStack(null, {
+			font: watermark.font,
+			bold: watermark.bold,
+			italics: watermark.italics
+		});
 		var size;
 
 		/**
@@ -670,7 +694,7 @@ LayoutBuilder.prototype.buildNextLine = function (textNode) {
 
 	var isForceContinue = false;
 	while (textNode._inlines && textNode._inlines.length > 0 &&
-		(line.hasEnoughSpaceForInline(textNode._inlines[0], textNode._inlines.slice(1)) || isForceContinue)) {
+	(line.hasEnoughSpaceForInline(textNode._inlines[0], textNode._inlines.slice(1)) || isForceContinue)) {
 		var isHardWrap = false;
 		var inline = textNode._inlines.shift();
 		isForceContinue = false;
